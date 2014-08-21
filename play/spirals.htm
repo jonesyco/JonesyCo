@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+  <meta charset="UTF-8">
+
+  <!--
+Copyright (c) 2014 by Jon Jones (http://codepen.io/alienvoices/pen/dAyFH)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+-->
+
+  <title>Spirograph visualizer - CodePen</title>
+
+  <style>/* Web Fonts @import */
+@import url(http://fonts.googleapis.com/css?family=Open+Sans:300,400,500);
+body {
+  font: 400 normal 1em/1.3 "Open Sans",sans-serif;
+  margin: 0;
+  background: black;
+}
+
+#spiro-container {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0;
+  position: relative;
+  background: #000;
+  overflow: hidden;
+}
+#spiro-container #dashboard {
+  font-size: 1.0em;
+  position: absolute;
+  z-index: 2;
+  left: -256px;
+  width: 280px;
+  transition: all .2s linear;
+  opacity: .8;
+}
+#spiro-container #dashboard #controls {
+  width: 180px;
+  padding: 18px;
+  background: lightsteelblue;
+}
+#spiro-container #dashboard #controls input {
+  margin: 1em 0 1.5em;
+}
+#spiro-container #dashboard #Jonesy {
+  text-align: right;
+  font-weight: 800;
+}
+#spiro-container #dashboard #handle {
+  background: steelblue;
+  width: 99%;
+  font-size: 1.5em;
+  line-height: 1em;
+  text-align: right;
+  padding-right: 3%;
+}
+#spiro-container .slide_in {
+  left: 0px !important;
+}
+
+.square_wrapper {
+  width: 100%;
+  padding-bottom: 100%;
+  position: relative;
+}
+.square_wrapper .padder {
+  margin: 5%;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+.square_wrapper .padder #tabletop {
+  width: 100%;
+  background: transparent;
+}
+
+#underlay #outerCircle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px dotted #f05;
+  border-radius: 100%;
+  opacity: .2;
+}
+#underlay #innerCircle {
+  position: absolute;
+  left: 50%;
+  top: 25%;
+  right: 0;
+  bottom: 25%;
+  border: 2px dotted white;
+  border-radius: 100%;
+  opacity: .2;
+}
+
+body {
+  background: #cccccc;
+  /* Old browsers */
+  background: -moz-linear-gradient(top, #cccccc 0%, #eeeeee 73%);
+  /* FF3.6+ */
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #cccccc), color-stop(73%, #eeeeee));
+  /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(top, #cccccc 0%, #eeeeee 73%);
+  /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(top, #cccccc 0%, #eeeeee 73%);
+  /* Opera 11.10+ */
+  background: -ms-linear-gradient(top, #cccccc 0%, #eeeeee 73%);
+  /* IE10+ */
+  background: linear-gradient(to bottom, #cccccc 0%, #eeeeee 73%);
+  /* W3C */
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#cccccc', endColorstr='#eeeeee',GradientType=0 );
+  /* IE6-9 */
+}
+
+body, html {
+  height: 100%;
+}</style>
+
+  <script>
+    window.open    = function(){};
+    window.print   = function(){};
+    // Support hover state for mobile.
+    if (false) {
+      window.ontouchstart = function(){};
+    }
+  </script>
+
+</head>
+
+<body>
+
+<div id="spiro-container">
+
+		<div class="slide_in" id="dashboard">
+			<div id="handle">&gt;</div>
+
+			<div id="controls">
+				<label for="r_inner">Radius inner circle</label><br>
+				<input value="16" id="r_inner" min="0.5" max="19.5" step="0.5" type="range"><br>
+				<label for="d">Distance</label><br>
+				<input value="8" id="d" min="0.5" max="29.5" step="0.5" type="range">
+        <div id="Jonesy">Jonesy 2014<br>
+          <sub><a href="mailto:soulside@gmail.com">contact</a></sub></div>
+			</div>
+
+		</div>
+
+		<div id="content" class="square_wrapper">
+			<div class="padder">
+				<canvas height="1000" width="1000" id="tabletop"></canvas>
+			</div>
+		</div>
+
+	</div>
+
+  <script src="dAyFH_data/jquery-d2626e67a4a8713294a4eea883b0e8ff.js"></script>
+
+<script>// From evanw / lightgl.js
+
+// Provides a simple 3D vector class. Vector operations can be done using member
+// functions, which return new vectors, or static functions, which reuse
+// existing vectors to avoid generating garbage.
+function Vector(x, y, z) {
+  this.x = x || 0;
+  this.y = y || 0;
+  this.z = z || 0;
+}
+
+// ### Instance Methods
+// The methods `add()`, `subtract()`, `multiply()`, and `divide()` can all
+// take either a vector or a number as an argument.
+Vector.prototype = {
+  negative: function() {
+    return new Vector(-this.x, -this.y, -this.z);
+  },
+  add: function(v) {
+    if (v instanceof Vector) return new Vector(this.x + v.x, this.y + v.y, this.z + v.z);
+    else return new Vector(this.x + v, this.y + v, this.z + v);
+  },
+  subtract: function(v) {
+    if (v instanceof Vector) return new Vector(this.x - v.x, this.y - v.y, this.z - v.z);
+    else return new Vector(this.x - v, this.y - v, this.z - v);
+  },
+  multiply: function(v) {
+    if (v instanceof Vector) return new Vector(this.x * v.x, this.y * v.y, this.z * v.z);
+    else return new Vector(this.x * v, this.y * v, this.z * v);
+  },
+  divide: function(v) {
+    if (v instanceof Vector) return new Vector(this.x / v.x, this.y / v.y, this.z / v.z);
+    else return new Vector(this.x / v, this.y / v, this.z / v);
+  },
+  equals: function(v) {
+    return this.x == v.x && this.y == v.y && this.z == v.z;
+  },
+  dot: function(v) {
+    return this.x * v.x + this.y * v.y + this.z * v.z;
+  },
+  cross: function(v) {
+    return new Vector(
+      this.y * v.z - this.z * v.y,
+      this.z * v.x - this.x * v.z,
+      this.x * v.y - this.y * v.x
+    );
+  },
+  length: function() {
+    return Math.sqrt(this.dot(this));
+  },
+  unit: function() {
+    return this.divide(this.length());
+  },
+  min: function() {
+    return Math.min(Math.min(this.x, this.y), this.z);
+  },
+  max: function() {
+    return Math.max(Math.max(this.x, this.y), this.z);
+  },
+  toAngles: function() {
+    return {
+      theta: Math.atan2(this.z, this.x),
+      phi: Math.asin(this.y / this.length())
+    };
+  },
+  angleTo: function(a) {
+    return Math.acos( this.dot(a) / ( this.length() * a.length() ) );
+  },
+  toArray: function(n) {
+    return [this.x, this.y, this.z].slice(0, n || 3);
+  },
+  clone: function() {
+    return new Vector(this.x, this.y, this.z);
+  },
+  init: function(x, y, z) {
+    this.x = x; this.y = y; this.z = z;
+    return this;
+  }
+};
+
+// ### Static Methods
+// `Vector.randomDirection()` returns a vector with a length of 1 and a
+// statistically uniform direction. `Vector.lerp()` performs linear
+// interpolation between two vectors.
+Vector.negative = function(a, b) {
+  b.x = -a.x; b.y = -a.y; b.z = -a.z;
+  return b;
+};
+Vector.add = function(a, b, c) {
+  if (b instanceof Vector) { c.x = a.x + b.x; c.y = a.y + b.y; c.z = a.z + b.z; }
+  else { c.x = a.x + b; c.y = a.y + b; c.z = a.z + b; }
+  return c;
+};
+Vector.subtract = function(a, b, c) {
+  if (b instanceof Vector) { c.x = a.x - b.x; c.y = a.y - b.y; c.z = a.z - b.z; }
+  else { c.x = a.x - b; c.y = a.y - b; c.z = a.z - b; }
+  return c;
+};
+Vector.multiply = function(a, b, c) {
+  if (b instanceof Vector) { c.x = a.x * b.x; c.y = a.y * b.y; c.z = a.z * b.z; }
+  else { c.x = a.x * b; c.y = a.y * b; c.z = a.z * b; }
+  return c;
+};
+Vector.divide = function(a, b, c) {
+  if (b instanceof Vector) { c.x = a.x / b.x; c.y = a.y / b.y; c.z = a.z / b.z; }
+  else { c.x = a.x / b; c.y = a.y / b; c.z = a.z / b; }
+  return c;
+};
+Vector.cross = function(a, b, c) {
+  c.x = a.y * b.z - a.z * b.y;
+  c.y = a.z * b.x - a.x * b.z;
+  c.z = a.x * b.y - a.y * b.x;
+  return c;
+};
+Vector.unit = function(a, b) {
+  var length = a.length();
+  b.x = a.x / length;
+  b.y = a.y / length;
+  b.z = a.z / length;
+  return b;
+};
+Vector.fromAngles = function(theta, phi) {
+  return new Vector(Math.cos(theta) * Math.cos(phi), Math.sin(phi), Math.sin(theta) * Math.cos(phi));
+};
+Vector.randomDirection = function() {
+  return Vector.fromAngles(Math.random() * Math.PI * 2, Math.asin(Math.random() * 2 - 1));
+};
+Vector.min = function(a, b) {
+  return new Vector(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.min(a.z, b.z));
+};
+Vector.max = function(a, b) {
+  return new Vector(Math.max(a.x, b.x), Math.max(a.y, b.y), Math.max(a.z, b.z));
+};
+Vector.lerp = function(a, b, fraction) {
+  return b.subtract(a).multiply(fraction).add(a);
+};
+Vector.fromArray = function(a) {
+  return new Vector(a[0], a[1], a[2]);
+};
+Vector.angleBetween = function(a, b) {
+  return a.angleTo(b);
+};
+
+// shim layer with setTimeout fallback
+window.requestAnimationFrame = (function(){
+  return  window.requestAnimationFrame       ||
+          window.webkitRequestAnimationFrame ||
+          window.mozRequestAnimationFrame    ||
+          function( callback ){
+            window.setTimeout(callback, 1000 / 60);
+          };
+})();</script>
+
+  <script src="dAyFH_data/localstorage.js"></script>
+  <script src="dAyFH_data/remember_scroll.js"></script>
+  <script>RememberScroll.init();</script>
+
+  <script>
+    if (document.location.search.match(/type=embed/gi)) {
+      window.parent.postMessage('resize', "*");
+    }
+  </script>
+
+  <script>
+    window.onload = function() {
+
+	// Note correlation canvas size and R = 10
+	// diameter = 2 x R = 20, canvas dimension = 1000, so 
+	// scale up with factor 50 to fill canvas (assumed that r < R)
+
+	Canvas.init( 'tabletop' , 1000, 1000 );
+	Plotter.speed = 1000;		
+	Plotter.autoscale = true;
+	Plotter.style.lineWidth = 6;
+
+	var bRi = document.getElementById ('r_inner');
+	var bd = document.getElementById ('d');
+
+	bRi.value = 16;
+	bd.value = 8;
+
+	Plotter.plotHypo( 10,parseFloat(bRi.value), parseFloat(bd.value) );
+
+  bRi.onchange = function(){
+		Plotter.plotHypo( 10, parseFloat(bRi.value), parseFloat(bd.value) );
+  };
+  bd.onchange = function(){
+		Plotter.plotHypo( 10, parseFloat(bRi.value), parseFloat(bd.value) );
+  };
+}
+
+var Hypotrochoid = function ( R, r, d ) {
+	// officially a hypotrochoid has R > r > d (in the analog world)
+	this.R = R;
+	this.r = r;
+	this.d = d;
+
+	this.init( );
+}
+
+Hypotrochoid.prototype = {
+
+	domain: { min: 0, max: 2*Math.PI },
+	t: 0,
+	step: Math.PI / 360,
+
+	/*
+		It's nicer to make Hypotrochoid a pure math object,
+		and put t, step and perhaps domain in Plotter.
+		Here it doesn't matter...
+	 */
+	init: function ( ) {
+		this.t = 0;
+
+		// calculate domain.max to create a complete figure
+		var r = this.r, R = this.R;
+		while ( r != Math.floor ( r ) || R != Math.floor ( R ) ) {
+				r *= 10.0;
+				R *= 10.0;
+		}
+
+		this.domain.max = Math.min( (r / gcd ( R, r ) ), 1000 ) * 2 * Math.PI;
+
+	},
+	getPoint: function( ) {
+		if ( this.t > this.domain.max + 1e-10) {	
+			// Allow for a small precision error 1e-10
+			// Anyway, for cyclic curves you need to stitch back to front, if you're ueberperfect
+			return null;
+		}
+
+		var dr = this.R - this.r;
+
+		var v = new Vector (
+			dr * Math.cos(this.t) + this.d * Math.cos( dr * this.t / this.r),
+			dr * Math.sin(this.t) - this.d * Math.sin( dr * this.t / this.r)
+		); 
+
+		// this.d -= 0.0002;
+		this.t += this.step;
+
+		return ( v );
+	},
+
+}
+
+// Perhaps you need more plotters at the same time? Pass Canvas as arg
+var Plotter = {
+	points: [],
+	figure: null,
+	iv: null,
+	style : {lineWidth: 14, strokeStyle: "rgba(255,255,255, 0.9)"},
+	frequency: 1000/24, // frame rate, draw 1 segment per frame
+	scale: 1,
+	autoscale: true,
+
+	// speed: number of points per segment/frame. It's not just animation, also it affects
+	// 'quality': lines plotted per segment are not transparent relative to each other
+	speed: 100,	
+
+	plotHypo: function ( R, r, d ) {
+		if ( R == r ) {
+			console.log ( 'Inner circle and outer circle cannot be same size' );
+			return;
+		}
+
+		if ( this.autoscale ) {
+			// Autoscale: Calculate scale depending on R, r and d
+			console.log ( R,r,d, (Math.abs ( R - r ) + d) );
+			this.scale = Canvas.elem.width / (2 * (Math.abs ( R - r ) + d));
+		}
+		else {
+			// Just scale based on ratio canvas and outer circle
+			this.scale = Canvas.elem.width / (2*R);
+			// console.log ( Canvas.elem.width, 2*R, this.scale )
+		}
+
+		// cancel current plot job
+		if ( this.iv ) {
+			clearInterval ( this.iv );
+			this.iv = null;
+		}
+
+		this.done = false;
+
+		Canvas.clear();
+
+		// Draw indicators of R,r (and d) on canvas
+		var m = new Vector();
+		Canvas.circle ( m, R*this.scale, '#905');
+		var m2 = m.add(new Vector((R-r) * this.scale, 0));
+		Canvas.circle ( m2, r*this.scale, '#509');
+		Canvas.circle ( m2, d*this.scale, '#888');
+
+		// Draw the animated Hypotrochoid
+		this.figure = new Hypotrochoid ( R, r, d );
+
+		this.points = [];
+
+		this.points.push( this.figure.getPoint ( ));
+		this.points.push( this.figure.getPoint ( ));
+
+		this.iv = setInterval ( this.plotPath.bind ( this ), this.frequency );
+	},
+
+	plotPath: function () {
+
+		// calculate new points
+		for ( var i = 0; i < this.speed; i++ ) {
+			var newp = this.figure.getPoint ( );
+
+			if ( newp ) {
+				this.points.push ( newp );
+			}
+			else {
+				this.done = true;
+
+				// Stop plot commands
+				clearInterval ( this.iv );
+				this.iv = null;
+				break;
+			} 
+		}
+
+		if ( !this.done ) {
+			// Tweak the array a bit: leave the last half line segment for the next path
+			var transp = this.points[this.points.length - 1];
+			this.points[this.points.length - 1] = this.points[this.points.length - 2].add( transp ).divide(2);
+
+		}
+
+		Canvas.path (  this.points, this.style, this.scale );
+
+		this.points.push ( transp );
+		this.points = this.points.slice ( -2 );	// Just keep the last 2
+
+	} 
+}
+
+var Canvas = {
+
+	init: function ( el_id, w, h, scale ) {
+
+		this.elem = document.getElementById( el_id );
+		this.elem.width = w;
+		this.elem.height = h;
+		this.ctx = this.elem.getContext('2d');
+		this.ctx.translate(w/2, h/2);
+
+	},
+
+	clear: function () {
+		this.ctx.clearRect(-this.elem.width/2, -this.elem.height/2, this.elem.width, this.elem.height);
+	},
+
+	path: function ( points, style, scale ) {
+		for ( var s in style ) {
+			this.ctx[s] = style[s];
+		}
+
+		this.ctx.beginPath();
+
+		// Transfer points to the coordinate system of the canvas
+		var p =  points[0].multiply ( scale );
+		this.ctx.moveTo ( p.x, p.y );
+
+		for ( var i = 1; i < points.length; i++ ) {
+			p =  points[i].multiply ( scale );
+			this.ctx.lineTo ( p.x, p.y );
+		}
+
+		this.ctx.stroke();
+	},
+
+	circle: function ( p, r, c) {
+		this.ctx.globalAlpha = 0.5;
+		this.ctx.beginPath();
+		this.ctx.fillStyle = c;
+	  this.ctx.arc(p.x, p.y,r,0,Math.PI*2,true);
+  	this.ctx.fill();		
+  	this.ctx.closePath();
+	}
+}
+
+var gcd = function(a, b) {
+  if ( ! b) {
+    return a;
+  }
+return gcd(b, a % b);
+};
+
+$(function() {
+			$('#handle').on('click', function () {
+				$('#dashboard').toggleClass ( 'slide_in' );
+				if (  $(this).html() == '&gt;' ) {
+					$(this).html('&lt;');
+				}
+				else {
+					$(this).html('&gt;');
+				}
+			});
+  setTimeout( function() {$('#handle').click();}, 1500 );
+		});
+    //@ sourceURL=pen.js
+  </script>
+
+
+
+
+</body></html>

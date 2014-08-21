@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title></title>
+        <link href="http://fonts.googleapis.com/css?family=Oswald:700|Neuton" rel="stylesheet" type="text/css">
+        <style>
+            body { font: 400 1em/1.5 "Neuton"; background: black; color: rgba(255,255,255,.25); text-align: center; margin: 0 }
+
+            p {
+  
+	            text-transform: uppercase;
+	            letter-spacing: 0;
+	            display: inline-block;
+	           /* border: 4px double rgba(255,255,255,.25);
+	            border-width: 4px 0;*/
+	            padding: 0em;
+	            position: absolute;
+	            top: 5%;
+	            left: 5%;
+                right: 5%;
+	             width: 90%;
+	             margin: 0 0 0 0;
+            }
+
+            p span {
+
+	            font: 800 15em/1 "Oswald", sans-serif;
+	            letter-spacing: 0;
+	            padding: 0 0 0 0;
+	            display: block;
+	            margin: 0;
+	            text-shadow: 0 0 40px rgba(255,255,255,.1);
+
+            /* Clip Background Image */
+
+	            background: url(http://f.cl.ly/items/010q3E1u3p2Q0j1L1S1o/animated_text_fill.png) repeat-y;
+	            -webkit-background-clip: text;
+
+            /* Animate Background Image */
+
+	            -webkit-text-fill-color: transparent;
+	            -webkit-animation: aitf 80s linear 2;
+
+            /* Activate hardware acceleration for smoother animations */
+
+	            -webkit-transform: translate3d(0,0,0);
+	            -webkit-backface-visibility: hidden;
+            }
+
+            /* Animate Background Image */
+
+            @-webkit-keyframes aitf {
+	            0% { background-position: 0% 50%; }
+	            100% { background-position: 100% 50%; }
+            }
+            
+        </style>
+    </head>
+    <body>
+        <p>
+            <span>JONESY & CO</span> 
+        </p>
+        
+    </body>
+</html>
