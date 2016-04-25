@@ -41,22 +41,22 @@ $mail->SMTPSecure = 'tls';
 $mail->SMTPAuth = true;
 
 //Username to use for SMTP authentication - use full email address for gmail
-$mail->Username = "soulside@gmail.com";
+$mail->Username = "email@gmail.com";
 
 //Password to use for SMTP authentication
-$mail->Password = "pimbkmgcjblsuyia";
+$mail->Password = "password";
 
 //Set who the message is to be sent from
-$mail->setFrom('pdxjonesy@gmail.com', 'Jack Jones');
+$mail->setFrom('email@gmail.com', 'First Name Last Name');
 
 //Set an alternative reply-to address
-$mail->addReplyTo('soulside@gmail.com', 'DO NOT REPLY');
+$mail->addReplyTo('replyto@gmail.com', 'DO NOT REPLY');
 
 //Set who the message is to be sent to
-$mail->addAddress('soulside@gmail.com', 'Jonathan Jones');
+$mail->addAddress('sentto@gmail.com', 'SENT TO ADDRESS');
 
 //Set the subject line
-$mail->Subject = 'JONESYCO Website Inquiry';
+$mail->Subject = 'Website Inquiry';
 
 //Read an HTML message body from an external file, convert referenced images to embedded,
 //convert HTML into a basic plain-text alternative body
